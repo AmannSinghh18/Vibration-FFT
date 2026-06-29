@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from gearbox_spectra.batch import _build_industrial_all_reference
 from gearbox_spectra.manifest import REFERENCE_PLOTS, SPECTRA_IMAGE_PLOTS
 from gearbox_spectra.plotting import (
     PNG_PIXEL_SIZE,
@@ -137,6 +138,17 @@ class PlotTests(unittest.TestCase):
             )
             with Image.open(base.with_suffix(".png")) as image:
                 self.assertEqual(image.size, (1920, 529))
+
+    def test_non_reference_signal_gets_industrial_style_reference(self) -> None:
+        signal = next(
+            item
+            for item in iter_uff_signals(DATA_DIR)
+            if item.source_name == "timesignal (56).uff"
+        )
+        reference = _build_industrial_all_reference(signal, None)
+        self.assertEqual(reference.kind, "envelope")
+        self.assertEqual(reference.x_limit, (0, 400))
+        self.assertEqual(reference.default_size_px, (1920, 529))
 
 
 if __name__ == "__main__":

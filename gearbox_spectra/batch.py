@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import csv
+from datetime import datetime, timedelta
 from io import BytesIO
 from pathlib import Path
+import re
 import zipfile
 
 import numpy as np
@@ -22,6 +24,10 @@ from .processing import (
     rms_spectrum,
 )
 from .uff import UFFSignal, iter_uff_signals
+
+
+STANDARD_INDUSTRIAL_SIZE_PX = (1920, 529)
+IST_OFFSET = timedelta(hours=5, minutes=30)
 
 
 def _native_spectrum(signal: UFFSignal) -> Spectrum:
@@ -48,6 +54,105 @@ def _industrial_spectrum(signal: UFFSignal, reference: IndustrialImagePlot) -> S
     if reference.kind in {"envelope", "acceleration"}:
         return Spectrum(native.frequency, native.amplitude, "m/s²")
     raise ValueError(f"unsupported industrial processing kind: {reference.kind}")
+
+
+def _signal_number(source_name: str) -> int:
+    match = re.search(r"\((\d+)\)", source_name)
+    return int(match.group(1)) if match else 0
+
+
+def _format_report_timestamp(timestamp: str) -> str:
+    parts = [int(item) for item in re.findall(r"\d+", timestamp)]
+    if len(parts) < 6:
+        return timestamp.strip()
+    day, month, year, hour, minute, second = parts[:6]
+    report_time = datetime(year, month, day, hour, minute, second) + IST_OFFSET
+    hour_12 = report_time.hour % 12 or 12
+    return f"{report_time:%d-%b-%y} {hour_12}:{report_time:%M:%S} {report_time:%p}"
+
+
+def _infer_industrial_kind(signal: UFFSignal) -> str:
+    source_number = _signal_number(signal.source_name)
+    if signal.quantity.lower() == "velocity" or signal.unit == "mm/s":
+        return "velocity_native"
+    if signal.sample_rate > 10_000:
+        return "acceleration"
+    if 3_000 <= signal.sample_rate <= 4_000:
+        return "envelope"
+    if 900 <= signal.sample_rate <= 1_100:
+        return "velocity_from_acceleration"
+    if 1_900 <= signal.sample_rate <= 2_100:
+        if source_number in {36, 41, 46, 51, 56}:
+            return "envelope"
+        return "velocity_from_acceleration"
+    return "acceleration"
+
+
+def _infer_industrial_limits(
+    signal: UFFSignal,
+    kind: str,
+) -> tuple[tuple[float, float], tuple[float, float], float, float]:
+    if kind == "velocity_native":
+        return (0, 2000), (0, 4), 200, 0.5
+    if kind == "velocity_from_acceleration":
+        if signal.sample_rate <= 1_100:
+            return (0, 400), (0, 4), 50, 0.5
+        return (0, 800), (0, 4), 50, 0.5
+    if kind == "acceleration":
+        return (0, 10000), (0, 12), 1000, 2
+    if kind == "envelope":
+        if signal.sample_rate <= 2_100:
+            return (0, 400), (0, 8), 50, 1
+        return (0, 1500), (0, 10), 100, 1
+    return (0, min(signal.sample_rate / 2, 10_000)), (0, 10), 100, 1
+
+
+def _infer_acquisition_label(signal: UFFSignal, kind: str) -> str:
+    source_number = _signal_number(signal.source_name)
+    if kind == "velocity_native":
+        return r"1002 T _SV3,2kHz0,25Hz20s"
+    if kind == "velocity_from_acceleration":
+        if signal.sample_rate <= 1_100:
+            return r"1006 T _SV0,4kHz0,06Hz16s"
+        return r"1004 T _SV0,8kHz0,03Hz27s"
+    if kind == "acceleration":
+        return r"1010 T _SA12,8kHz1Hz0s"
+    if kind == "envelope":
+        high_band_numbers = {4, 9, 14, 19, 24, 30, 36, 41, 46, 51, 56}
+        if source_number in high_band_numbers:
+            return r"1018 T _EA1,5kHz2,5-10kHz"
+        return r"1012 T _EA1,5kHz0,5-10kHz"
+    return r"1000 T _Spectrum"
+
+
+def _build_industrial_all_reference(
+    signal: UFFSignal,
+    exact_reference: IndustrialImagePlot | None,
+) -> IndustrialImagePlot:
+    if exact_reference is not None:
+        return exact_reference
+
+    kind = _infer_industrial_kind(signal)
+    x_limit, y_limit, x_tick, y_tick = _infer_industrial_limits(signal, kind)
+    report_timestamp = _format_report_timestamp(signal.timestamp)
+    source_label = Path(signal.source_name).stem
+    acquisition = _infer_acquisition_label(signal, kind)
+    header = (
+        rf"Ball Mill Lifting Side\H2SH-19; 3002378204-1000VA_"
+        rf"{source_label} inferred measurement\{acquisition}\Spectrum {report_timestamp}"
+    )
+    return IndustrialImagePlot(
+        reference_image=signal.source_name,
+        source=signal.source_name,
+        kind=kind,
+        header=header,
+        x_limit=x_limit,
+        y_limit=y_limit,
+        x_tick=x_tick,
+        y_tick=y_tick,
+        rpm=992,
+        default_size_px=STANDARD_INDUSTRIAL_SIZE_PX,
+    )
 
 
 def _generic_limits(spectrum: Spectrum) -> tuple[tuple[float, float], tuple[float, float]]:
@@ -100,7 +205,11 @@ def generate_batch(
     generic_dir = output / "generic"
     reference_dir = output / "reference_matched"
     spectra_image_dir = output / "spectra_image_matched"
+    spectra_all_dir = output / "spectra_all_57"
     reference_sizes = _reference_image_sizes(spectra_reference_path)
+    exact_image_by_source = {
+        reference.source: reference for reference in SPECTRA_IMAGE_PLOTS
+    }
     rows: list[dict[str, object]] = []
 
     for signal in signals:
@@ -203,6 +312,45 @@ def generate_batch(
         )
         generated_spectra_images += 1
 
+    generated_spectra_all = 0
+    for signal in signals:
+        exact_reference = exact_image_by_source.get(signal.source_name)
+        industrial_reference = _build_industrial_all_reference(
+            signal,
+            exact_reference,
+        )
+        spectrum = _industrial_spectrum(signal, industrial_reference)
+        peak_frequency, peak_amplitude = dominant_peak(
+            spectrum, 0.01, industrial_reference.x_limit[1]
+        )
+        size_px = (
+            reference_sizes.get(exact_reference.reference_image)
+            if exact_reference is not None
+            else None
+        )
+        plot_industrial_spectrum(
+            spectrum,
+            spectra_all_dir / safe_stem(signal.source_name),
+            reference=industrial_reference,
+            size_px=size_px,
+            formats=formats,
+        )
+        rows.append(
+            {
+                "category": "spectra_all_57",
+                "figure": "",
+                "source": signal.source_name,
+                "processing": industrial_reference.kind,
+                "sample_count": signal.sample_count,
+                "sample_rate_hz": f"{signal.sample_rate:.9g}",
+                "signal_rms": f"{np.sqrt(np.mean((signal.values - np.mean(signal.values)) ** 2)):.9g}",
+                "spectrum_unit": spectrum.unit,
+                "peak_frequency_hz": f"{peak_frequency:.9g}",
+                "peak_rms_amplitude": f"{peak_amplitude:.9g}",
+            }
+        )
+        generated_spectra_all += 1
+
     output.mkdir(parents=True, exist_ok=True)
     with (output / "spectrum_summary.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
@@ -227,6 +375,7 @@ def generate_batch(
         "generic_plots": len(signals),
         "reference_plots": generated_references,
         "spectra_image_plots": generated_spectra_images,
+        "spectra_all_57_plots": generated_spectra_all,
         "skipped_spectra_image_plots": len(skipped_spectra_images),
         "missing_reference_plots": len(MISSING_PRESSING_SIDE),
     }

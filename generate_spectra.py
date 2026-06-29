@@ -72,6 +72,10 @@ def main(argv: list[str] | None = None) -> int:
         f"plots; skipped {result['skipped_spectra_image_plots']}."
     )
     print(
+        f"Generated {result['spectra_all_57_plots']} industrial-style spectra "
+        "for all UFF time-signal files."
+    )
+    print(
         f"{result['missing_reference_plots']} Pressing-side reference figures "
         "are documented as unavailable."
     )
