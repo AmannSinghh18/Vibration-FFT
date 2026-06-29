@@ -1,0 +1,22 @@
+{
+  "canvas_points": [468, 144],
+  "png_pixels_at_300_dpi": [1950, 600],
+  "processing": {
+    "window": "Hann",
+    "mean_removal": true,
+    "spectrum": "single-sided RMS",
+    "velocity_conversion": "acceleration amplitude divided by 2*pi*frequency"
+  },
+  "matched_lifting_side_figures": {
+    "18": "timesignal (10).uff",
+    "20": "timesignal (26).uff",
+    "22": "timesignal (32).uff",
+    "24": "timesignal (4).uff",
+    "26": "timesignal (30).uff",
+    "28": "timesignal (51).uff",
+    "30": "timesignal (2).uff",
+    "32": "timesignal (28).uff",
+    "34": "timesignal (49).uff"
+  },
+  "missing_pressing_side_figures": [19, 21, 23, 25, 27, 29, 31, 33, 35]
+}

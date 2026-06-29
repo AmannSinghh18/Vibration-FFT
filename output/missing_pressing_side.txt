@@ -1,0 +1,11 @@
+The supplied archive has no UFF records matching these Pressing-side report timestamps. These figures were not fabricated:
+
+- Fig. 19: velocity spectrum, input shaft, Pressing side
+- Fig. 21: velocity spectrum, intermediate shaft, Pressing side
+- Fig. 23: velocity spectrum, output shaft, Pressing side
+- Fig. 25: envelope spectrum, input shaft, Pressing side
+- Fig. 27: envelope spectrum, intermediate shaft, Pressing side
+- Fig. 29: envelope spectrum, output shaft, Pressing side
+- Fig. 31: acceleration spectrum, input shaft, Pressing side
+- Fig. 33: acceleration spectrum, intermediate shaft, Pressing side
+- Fig. 35: acceleration spectrum, output shaft, Pressing side
