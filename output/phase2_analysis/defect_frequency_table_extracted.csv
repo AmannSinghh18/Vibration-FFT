@@ -1,0 +1,33 @@
+family,component,name,frequency_hz
+gear,Input/Motor shaft,Shaft rotation,16.5
+gear,2nd shaft,Shaft rotation,8.11
+gear,Output shaft,Shaft rotation,2.05
+gear,Input/Motor shaft,Wobbling,33
+gear,2nd shaft,Wobbling,16.21
+gear,Output shaft,Wobbling,4.11
+gear,Gear mesh,GMF Stage 1,462
+gear,Gear mesh,GMF Stage 2,145.89
+bearing,Input shaft bearing 150,Cage FTF/Cage,7.11
+bearing,Input shaft bearing 150,RE BSF/Rolling element,56.74
+bearing,Input shaft bearing 150,OR BPFO/Outer race,127.89
+bearing,Input shaft bearing 150,IR BPFI/Inner race,169.11
+bearing,Input shaft bearing 151,Cage FTF/Cage,6.93
+bearing,Input shaft bearing 151,RE BSF/Rolling element,51.81
+bearing,Input shaft bearing 151,OR BPFO/Outer race,125.9
+bearing,Input shaft bearing 151,IR BPFI/Inner race,171.11
+bearing,2nd shaft bearing 350,Cage FTF/Cage,3.35
+bearing,2nd shaft bearing 350,RE BSF/Rolling element,22.05
+bearing,2nd shaft bearing 350,OR BPFO/Outer race,50.23
+bearing,2nd shaft bearing 350,IR BPFI/Inner race,71.35
+bearing,2nd shaft bearing 350/351,Cage FTF/Cage,3.32
+bearing,2nd shaft bearing 350/351,RE BSF/Rolling element,21.48
+bearing,2nd shaft bearing 350/351,OR BPFO/Outer race,49.93
+bearing,2nd shaft bearing 350/351,IR BPFI/Inner race,71.65
+bearing,Output shaft bearing 250,Cage FTF/Cage,0.92
+bearing,Output shaft bearing 250,RE BSF/Rolling element,9.8
+bearing,Output shaft bearing 250,OR BPFO/Outer race,23.97
+bearing,Output shaft bearing 250,IR BPFI/Inner race,29.45
+bearing,Output shaft bearing 250/251,Cage FTF/Cage,0.92
+bearing,Output shaft bearing 250/251,RE BSF/Rolling element,9.84
+bearing,Output shaft bearing 250/251,OR BPFO/Outer race,23.98
+bearing,Output shaft bearing 250/251,IR BPFI/Inner race,29.45

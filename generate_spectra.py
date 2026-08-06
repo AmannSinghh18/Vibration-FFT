@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 from gearbox_spectra.batch import generate_batch
+from gearbox_spectra.phase2 import run_phase2_analysis
 from gearbox_spectra.uff import UFFError
 
 
@@ -27,6 +28,16 @@ def build_parser() -> argparse.ArgumentParser:
             "image-matched output dimensions. Defaults to auto-detecting "
             "Spectra.zip or Spectra beside the command."
         ),
+    )
+    parser.add_argument(
+        "--phase2",
+        action="store_true",
+        help="Run industrial vibration analysis: peak detection, matching, sidebands, and annotated plots.",
+    )
+    parser.add_argument(
+        "--defect-table",
+        default="defect frequency calculation.pdf",
+        help="PDF containing gearbox and bearing characteristic frequency tables.",
     )
     return parser
 
@@ -79,6 +90,26 @@ def main(argv: list[str] | None = None) -> int:
         f"{result['missing_reference_plots']} Pressing-side reference figures "
         "are documented as unavailable."
     )
+
+    if args.phase2:
+        try:
+            phase2_result = run_phase2_analysis(
+                Path(args.input),
+                Path(args.output),
+                Path(args.defect_table),
+                spectra_reference_path=spectra_reference,
+                formats=formats,
+            )
+        except (UFFError, OSError, ValueError) as exc:
+            print(f"error: phase 2 failed: {exc}", file=sys.stderr)
+            return 1
+        print(
+            "Phase 2 complete: "
+            f"{phase2_result['detected_peaks']} significant peaks, "
+            f"{phase2_result['matched_peaks']} matched peaks, "
+            f"{phase2_result['sideband_hits']} sideband hits across "
+            f"{phase2_result['signals']} spectra."
+        )
     return 0
 
 

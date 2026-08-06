@@ -1,0 +1,13 @@
+Phase 2 methodology
+===================
+
+1. FFT spectra are calculated from UFF data before any defect-table comparison.
+2. Significant peaks are local maxima above a robust noise threshold: max(median + 12*MAD-derived sigma,
+   7% of visible-band maximum), with prominence at least max(10*MAD-derived sigma, 6% of maximum).
+   If more than 35 peaks pass these tests in one spectrum, the 35 highest-prominence peaks are reported.
+3. Frequency matching tolerance is max(2 FFT frequency bins, 1% of theoretical frequency).
+4. Gear and bearing harmonics are generated mathematically from the extracted table values only.
+5. Velocity spectra prioritize shaft/wobble/GMF matches; acceleration spectra prioritize bearing matches.
+6. Sidebands are searched from detected peaks around matched characteristic frequencies using table-derived
+   shaft, wobble, cage, and other low-frequency spacings; accepted sideband peaks must be at least 35%
+   of the center peak amplitude and form a repeatable/symmetric family.

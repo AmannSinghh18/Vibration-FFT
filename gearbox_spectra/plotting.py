@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
+from typing import Mapping, Sequence
 
 import matplotlib
 
@@ -130,6 +131,7 @@ def plot_industrial_spectrum(
     *,
     reference: IndustrialImagePlot,
     size_px: tuple[int, int] | None = None,
+    annotations: Sequence[Mapping[str, object]] = (),
     formats: tuple[str, ...] = ("png",),
 ) -> list[Path]:
     """Plot a widescreen spectrum matching the supplied Spectra.zip JPG style."""
@@ -218,6 +220,58 @@ def plot_industrial_spectrum(
             va="top",
             fontsize=10,
             color="black",
+        )
+
+    y_span = reference.y_limit[1] - reference.y_limit[0]
+    label_levels = (0.92, 0.82, 0.72, 0.62)
+    for annotation_index, annotation in enumerate(annotations):
+        frequency = float(annotation["frequency"])
+        amplitude = float(annotation["amplitude"])
+        if not reference.x_limit[0] <= frequency <= reference.x_limit[1]:
+            continue
+        role = str(annotation.get("role", "peak"))
+        if role == "sideband":
+            color = "#ff8c00"
+            linestyle = (0, (2, 2))
+            marker = "o"
+        elif annotation.get("matched"):
+            color = "#cc0000"
+            linestyle = (0, (5, 2))
+            marker = "^"
+        else:
+            color = "#008000"
+            linestyle = (0, (1, 3))
+            marker = "^"
+        axis.axvline(
+            frequency,
+            color=color,
+            linewidth=0.55,
+            linestyle=linestyle,
+            alpha=0.8,
+        )
+        axis.plot(
+            [frequency],
+            [min(amplitude, reference.y_limit[1])],
+            marker=marker,
+            markersize=3.0,
+            color=color,
+            markeredgewidth=0,
+            clip_on=True,
+        )
+        label = str(annotation.get("label", f"{frequency:.2f} Hz"))
+        label_y = reference.y_limit[0] + y_span * label_levels[
+            annotation_index % len(label_levels)
+        ]
+        axis.text(
+            frequency,
+            label_y,
+            label,
+            color=color,
+            fontsize=6.2,
+            rotation=90,
+            va="top",
+            ha="right",
+            clip_on=True,
         )
 
     output_base.parent.mkdir(parents=True, exist_ok=True)

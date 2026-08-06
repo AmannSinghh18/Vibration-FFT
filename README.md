@@ -66,6 +66,32 @@ Spectra.zip image-matched mapping is encoded in `gearbox_spectra/manifest.py`
 because it also stores the visual headers, axis ranges, RPM labels, and the
 timestamp-based UFF/image pairings.
 
+## Phase 2: Industrial vibration analysis
+
+Run peak detection, defect-frequency matching, sideband analysis, and annotated
+industrial spectra with:
+
+```powershell
+python generate_spectra.py `
+  --input "UFF Files Bearing defect.zip" `
+  --spectra-reference "Spectra.zip" `
+  --defect-table "defect frequency calculation.pdf" `
+  --phase2 `
+  --output output
+```
+
+Phase 2 writes:
+
+- `output/phase2_annotated_spectra`: 57 annotated industrial spectra as PDF, SVG, and PNG.
+- `output/phase2_analysis/defect_frequency_table_extracted.csv`: gearbox and bearing frequencies extracted from the PDF.
+- `output/phase2_analysis/detected_peak_matches.csv`: detected peaks, amplitudes, matches, tolerances, and interpretation.
+- `output/phase2_analysis/sideband_analysis.csv`: detected sideband families and spacing errors.
+- `output/phase2_analysis/diagnostic_summary.csv`: one-row summary for every UFF spectrum.
+- `output/phase2_analysis/methodology.txt`: exact threshold, tolerance, and sideband rules.
+
+The frequency comparison tolerance is `max(2 FFT bins, 1% of theoretical frequency)`.
+Detected peaks are selected directly from the FFT spectrum before table comparison.
+
 ## Tests
 
 The tests use Python's built-in `unittest` runner:

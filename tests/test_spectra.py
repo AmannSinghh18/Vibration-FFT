@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image
 
 from gearbox_spectra.batch import _build_industrial_all_reference
+from gearbox_spectra.phase2 import load_defect_frequency_table
 from gearbox_spectra.manifest import REFERENCE_PLOTS, SPECTRA_IMAGE_PLOTS
 from gearbox_spectra.plotting import (
     PNG_PIXEL_SIZE,
@@ -149,6 +150,19 @@ class PlotTests(unittest.TestCase):
         self.assertEqual(reference.kind, "envelope")
         self.assertEqual(reference.x_limit, (0, 400))
         self.assertEqual(reference.default_size_px, (1920, 529))
+
+
+class Phase2Tests(unittest.TestCase):
+    def test_defect_frequency_pdf_extraction(self) -> None:
+        frequencies = load_defect_frequency_table(WORKSPACE / "defect frequency calculation.pdf")
+        self.assertEqual(len(frequencies), 32)
+        by_name = {(item.family, item.component, item.name): item.frequency_hz for item in frequencies}
+        self.assertAlmostEqual(by_name[("gear", "Gear mesh", "GMF Stage 1")], 462.00)
+        self.assertAlmostEqual(by_name[("gear", "Gear mesh", "GMF Stage 2")], 145.89)
+        self.assertAlmostEqual(
+            by_name[("bearing", "Input shaft bearing 151", "OR BPFO/Outer race")],
+            125.90,
+        )
 
 
 if __name__ == "__main__":
