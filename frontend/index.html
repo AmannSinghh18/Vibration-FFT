@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vibration Analysis | UFF Spectrum Tool</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">V</div>
+      <div><p class="eyebrow">Industrial condition monitoring</p><h1>Vibration Analysis</h1><p class="subtitle">UFF spectrum and characteristic-frequency analysis</p></div>
+      <div class="system-status"><span class="status-dot"></span> Analysis service</div>
+    </header>
+
+    <section class="card upload-card" aria-labelledby="upload-title">
+      <div class="section-heading"><div><p class="eyebrow">Input</p><h2 id="upload-title">Upload UFF file</h2></div><span class="file-badge">Dataset 58</span></div>
+      <form id="upload-form">
+        <label class="dropzone" id="dropzone" for="uff-file"><span class="upload-icon" aria-hidden="true">↑</span><span><strong>Choose a .uff time signal</strong><small>or drag and drop it here</small></span><input id="uff-file" type="file" accept=".uff,application/octet-stream"></label>
+        <div class="upload-actions"><span id="selected-file" class="muted">No file selected</span><button id="analyze-button" class="button primary" type="submit" disabled>Analyze file</button></div>
+      </form>
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+    </section>
+
+    <section id="workspace" class="workspace hidden">
+      <div class="info-grid">
+        <article class="card info-card"><p class="eyebrow">File information</p><div class="file-name" id="file-name">—</div><dl class="metadata" id="metadata"></dl></article>
+        <article class="card info-card analysis-card"><p class="eyebrow">Analysis options</p><h2>Advanced analysis</h2><p class="muted description">Run the existing Phase 2 peak and defect-frequency logic against this signal.</p>
+          <label class="check-row disabled-row"><input id="peak-matching" type="checkbox" checked disabled><span><strong>Peak detection &amp; characteristic matching</strong><small>Required Phase 2 baseline</small></span></label>
+          <label class="check-row"><input id="sideband-analysis" type="checkbox"><span><strong>Sideband analysis</strong><small>Compare detected sidebands with table-derived spacings</small></span></label>
+          <button id="phase2-button" class="button secondary" type="button">Run Phase 2 analysis</button>
+        </article>
+      </div>
+
+      <section class="card spectrum-card" aria-labelledby="spectrum-title"><div class="section-heading compact"><div><p class="eyebrow">Phase 1</p><h2 id="spectrum-title">Normal spectrum</h2></div><span id="spectrum-unit" class="unit-pill">—</span></div><div id="phase1-plot" class="plot" aria-label="Interactive Phase 1 spectrum"></div></section>
+      <section id="phase2-section" class="card spectrum-card hidden" aria-labelledby="phase2-title"><div class="section-heading compact"><div><p class="eyebrow">Phase 2</p><h2 id="phase2-title">Analyzed spectrum</h2></div><span id="analysis-counts" class="muted">—</span></div><div id="phase2-plot" class="plot" aria-label="Interactive Phase 2 spectrum"></div><div id="peak-table-wrap" class="table-wrap hidden"><div class="table-heading"><h3>Detected significant peaks</h3><span class="muted">Hover plot markers for full detail</span></div><table><thead><tr><th>Peak (Hz)</th><th>Amplitude</th><th>Match</th><th>Characteristic</th><th>Difference</th><th>Sidebands</th></tr></thead><tbody id="peak-table"></tbody></table></div></section>
+    </section>
+  </main>
+  <script src="/js/app.js"></script>
+</body>
+</html>

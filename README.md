@@ -110,3 +110,25 @@ PNG dimensions.
 The supplied files align with the report's nine Lifting-side timestamps. No
 UFF records align with the nine Pressing-side timestamps, so those graphs are
 reported as unavailable rather than reconstructed from unrelated signals.
+
+## Web application
+
+The repository includes a Flask API and a vanilla JavaScript dashboard. Install the
+same dependencies, including Flask, then start the service:
+
+```powershell
+python -m pip install -r requirements.txt
+python app.py
+```
+
+Open `http://127.0.0.1:5000`. The browser sends a selected `.uff` file to
+`POST /api/analyze` for Phase 1. `POST /api/analyze/phase2` runs the existing
+peak detection and characteristic-frequency matching, with the
+`sideband_analysis=true` form field enabling sideband analysis. `GET /api/health`
+is available for a service check.
+
+The interactive plots use Plotly from its browser CDN. Spectrum values are
+returned by the backend; the browser only adds interactive overlays and readable
+annotations. Phase 2 labels are limited to the strongest twelve peak markers in
+the plot to prevent visual overlap, while the complete detected peak list remains
+available in the table and API response.
