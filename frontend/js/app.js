@@ -6,7 +6,7 @@
   const fileInput = el("uff-file");
   const dropzone = el("dropzone");
   const plotId = "spectrum-plot";
-  const analysisInputs = [el("sideband-analysis"), el("harmonic-markers"), el("envelope-analysis")];
+  const analysisInputs = [el("sideband-analysis"), el("harmonic-markers")];
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
